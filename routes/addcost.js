@@ -1,24 +1,30 @@
+/**
+ * Or Bitan 209336916
+ * Michael Lipshin 312354491 */
+
 var express = require('express');
 var router = express.Router();
 const User = require('../module/users')
 const Cost = require('../module/costs')
 
-
-
-
-/* GET users listing. */
+/** This route handler handles POST requests to the /users endpoint */
 router.post('/', async function(req, res, next) {
+
+  /** Find the user with the given user ID */
   await User.find({ "id" : req.body.user_id}).then( function (ans){
-
-
 
     if (ans.length < 1) {
       console.log(ans )
       return res.status(400).send('User not found');
-
     }
     else {
       if ((req.body.year > 1990 && req.body.year < 2024) && (req.body.month > 0 && req.body.month < 13)) {
+
+        /** Check if category is valid */
+        const category = req.body.category;
+        if (!['food', 'health', 'housing', 'sport', 'education', 'transportation', 'other'].includes(category)) {
+          return res.status(400).send('Invalid category');
+        }
 
         const year = req.body.year.toString()
         const month = req.body.month.toString().padStart(2, '0');
@@ -36,8 +42,8 @@ router.post('/', async function(req, res, next) {
           'day': req.body.day,
           'id': cost_id,
           'description': req.body.description,
-          'category': req.body.category,
-          'sum': 123
+          'category': category,
+          'sum': req.body.sum
         })
         res.status(200).send('User  found');
       }
@@ -47,15 +53,6 @@ router.post('/', async function(req, res, next) {
     }
   }).catch(next);
 
- // if (user.length <= 1) return res.status(400).send('User not found');
-
-
-  //const now = new Date();
-  //const costId = '${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}';
-
-
   });
-
-
 
 module.exports = router;

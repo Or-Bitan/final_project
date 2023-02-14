@@ -5,13 +5,13 @@ const cost = require('../module/costs')
 /* GET home page. */
 router.get('/',
     async function (req, res, next) {
-   await cost.find({user_id:req.query.user_id}).then(function(ans) {if(ans<1){
-       res.status(400).send('User not found, Error');
+   await cost.find({user_id:req.query.user_id,year:req.query.year,month:req.query.month}).then(function(ans) {if(ans<1){
+       res.status(400).send('Report not found, Error');
 
    }});
 
        await cost.aggregate([
-            {$match: {'user_id':Number(req.query.user_id)}},
+            {$match: {'user_id':Number(req.query.user_id),'year':Number(req.query.year),'month':Number(req.query.month)}},
             {
                 $group: {
                     _id: "$category",

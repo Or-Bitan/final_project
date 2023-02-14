@@ -9,11 +9,6 @@ mongoose.Promise = global.Promise;
 
 
 
-
-
-
-
-
 var aboutRouter = require('./routes/about');
 var costRouter = require('./routes/addcost');
 const reportRouter = require('./routes/report');

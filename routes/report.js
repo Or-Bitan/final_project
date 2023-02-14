@@ -1,72 +1,64 @@
-var express = require('express');
-var router = express.Router();
-const user = require('../module/users')
-const cost = require('../module/costs')
-/* GET home page. */
-router.get('/',
-    async function (req, res, next) {
-   await cost.find({user_id:req.query.user_id,year:req.query.year,month:req.query.month}).then(function(ans) {if(ans<1){
-       res.status(400).send('Report not found, Error');
+/**
+ * Or Bitan 209336916
+ * Michael Lipshin 312354491 */
 
-   }});
+const express = require('express');
+const router = express.Router();
+const Cost = require('../module/costs');
 
-       await cost.aggregate([
-            {$match: {'user_id':Number(req.query.user_id),'year':Number(req.query.year),'month':Number(req.query.month)}},
-            {
-                $group: {
-                    _id: "$category",
-                    expenses: {
-                        $push: {
-                            day: "$day",
-                            description: "$description",
-                            year:"$year",
-                            month:"$motnh",
-                            day:"$day",
-                            sum: "$sum"
-                        }
+/** This route handler handles GET requests to the /costs endpoint */
+router.get('/', async function (req, res, next) {
+
+    /** Find all costs for the given user ID, year, and month */
+    await Cost.find({ user_id: req.query.user_id, year: req.query.year, month: req.query.month })
+        .then(function (ans) {
+            if (ans.length < 1) {
+                /** If no costs are found, return a 400 status code and an error message */
+                res.status(400).send('Report not found, Error');
+            }
+        });
+
+    /** Aggregate costs by category, for the given user ID, year, and month */
+    await Cost.aggregate([
+        { $match: { 'user_id': Number(req.query.user_id), 'year': Number(req.query.year), 'month': Number(req.query.month) } },
+        {
+            $group: {
+                _id: "$category",
+                expenses: {
+                    $push: {
+                        day: "$day",
+                        description: "$description",
+                        year: "$year",
+                        month: "$month",
+                        sum: "$sum"
                     }
-                }
+                },
+                total_cost: { $sum: "$sum" }
             }
-
-        ]).then(function (ans) {
+        }
+    ])
+        .then(function (ans) {
+            /** Create an object to hold the report, with empty arrays for each category */
             const report = {
-                "food": [],
-                "health": [],
-                "housing": [],
-                "sport": [],
-                "education": [],
-                "transportation": [],
-                "other": []
+                "food": { expenses: [], total_cost: 0 },
+                "health": { expenses: [], total_cost: 0 },
+                "housing": { expenses: [], total_cost: 0 },
+                "sport": { expenses: [], total_cost: 0 },
+                "education": { expenses: [], total_cost: 0 },
+                "transportation": { expenses: [], total_cost: 0 },
+                "other": { expenses: [], total_cost: 0 }
             }
 
+            /** Iterate over the results of the aggregation and add the expenses to the appropriate category array */
             for (let doc of ans) {
-                report[doc["_id"]] = doc["expenses"]
-                console.log(doc)
+                report[doc["_id"]].expenses = doc["expenses"];
+                report[doc["_id"]].total_cost = doc["total_cost"];
             }
+            /** Send the report object as the response */
             res.send(report)
 
-        }).catch(err => res.send(err))
-
-        // if(ans.length>= 1){
-
-        /*  cost.create({
-              "user_id": 123,
-              "year": 1992,
-              "month": 12,
-              "day": 3,
-              "description": "asdasdasd",
-              "sum": 123,
-              "category":"food"
-          }).then().catch(err => console.log(err));
-      }
-      else{
-          console.log(req.body);
-
-      }
-  }).catch(err => res.end(err))
+        })
+        .catch(err => res.send(err));
 });
-*/
-
-    });
 
 module.exports = router;
